@@ -75,16 +75,15 @@ public class CamelService {
                             public void process(Exchange exchange) throws Exception {
                                 Message in = exchange.getIn();
                                 String inBody = in.getBody(String.class);
-
-                                List<String> result = objectMapper.readValue(inBody, new TypeReference<List<String>>() {});
-
-
-                                inBody = inBody.replace("[\"", "").replace("\"]", "").replace(",", " ");
-                                in.setBody(result);
+                                inBody = inBody.replace("[\"", "")
+                                        .replace("\"", "")
+                                        .replace("]", "");
+                                in.setBody(inBody);
                                 exchange.setIn(in);
                             }
                         })
-                        .setHeader(RedisConstants.COMMAND, constant("LPUSH"))
+                        .split(body(), ",")
+                        .setHeader(RedisConstants.COMMAND, constant("RPUSH"))
                         .setHeader(RedisConstants.KEY, constant("err:"+RedisKeyConstants.NOTIFICATION_EVENT_QUEUE))
                         .setHeader(RedisConstants.VALUE, simple("${body}"))
                         .setHeader(RedisConstants.TIMEOUT, constant(1L))
